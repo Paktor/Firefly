@@ -50,7 +50,7 @@ class FireflyTask extends DefaultTask {
         configMapFile = new File(outputDir, CONFIG_MAP)
         configMapFile.absolutePath
         inputs.outOfDate { change ->
-            if (!change.file.name.equals(CONFIG_MAP) && change.file.isFile()) {
+            if (change.file.isFile() && !change.file.name.equals(CONFIG_MAP)) {
                 invokeGenerator(change.file.path)
                 recordFilePackageName()
             }
@@ -65,15 +65,16 @@ class FireflyTask extends DefaultTask {
             configMapFile.createNewFile()
         }
         for (File file : inputDir.listFiles())
-            file.eachLine {
-                line ->
-                    if (line.contains('namespace') && line.contains('java')) {
-                        String packageName = line.substring(line.indexOf('java') + 4).trim()
-                        if (!configMapFile.text.contains(packageName))
-                            configMapFile.append(file.name + CONFIG_MAP_SIGN + packageName + '\n')
-                    }
-
-            };
+            if (file.isFile()) {
+                file.eachLine {
+                    line ->
+                        if (line.contains('namespace') && line.contains('java')) {
+                            String packageName = line.substring(line.indexOf('java') + 4).trim()
+                            if (!configMapFile.text.contains(packageName))
+                                configMapFile.append(file.name + CONFIG_MAP_SIGN + packageName + '\n')
+                        }
+                };
+            }
     }
 
     def void deleteFile(String name) {
