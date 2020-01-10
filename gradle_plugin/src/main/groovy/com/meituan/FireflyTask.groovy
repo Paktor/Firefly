@@ -40,13 +40,17 @@ class FireflyTask extends DefaultTask {
 
     @TaskAction
     def generator(IncrementalTaskInputs inputs) throws Exception {
+        if (!inputs.incremental) {
+            project.delete(outputDir.listFiles())
+        }
+
         if (!outputDir.exists())
             outputDir.mkdirs()
 
         configMapFile = new File(outputDir, CONFIG_MAP)
         configMapFile.absolutePath
         inputs.outOfDate { change ->
-            if (!change.file.name.equals(CONFIG_MAP)) {
+            if (!change.file.name.equals(CONFIG_MAP) && change.file.isFile()) {
                 invokeGenerator(change.file.path)
                 recordFilePackageName()
             }
